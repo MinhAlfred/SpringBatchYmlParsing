@@ -6,11 +6,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @StepScope
-public class UpperCaseProcessor
-        implements ItemProcessor<String, String> {
-
+public class LowerCaseProcessor implements ItemProcessor<String ,String> {
     @Override
     public String process(String item) {
-        return item.toUpperCase();
+        return item.toLowerCase();
     }
 }

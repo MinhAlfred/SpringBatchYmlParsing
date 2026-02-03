@@ -1,0 +1,59 @@
+jobs:
+  - name: jobA
+    parameters:
+      inputFile: classpath:data/input.txt
+    schedule:
+      type: cron
+      expression: "0 */1 * * * *"
+
+    steps:
+      - name: step1
+        type: chunk
+        chunkSize: 2
+
+        reader:
+          bean: simpleStringReader
+
+        processor:
+          bean: upperCaseProcessor
+
+        writer:
+          bean: consoleWriter
+
+      - name: step2
+        type: chunk
+        chunkSize: 2
+
+        reader:
+          bean: simpleStringReader
+
+        processor:
+          bean: lowerCaseProcessor
+
+        writer:
+          bean: consoleWriter
+
+  - name: jobB
+    parameters:
+      inputFile: classpath:data/input.txt
+    schedule:
+      type: cron
+      expression: "30 */1 * * * *"
+    steps:
+      - name: step1
+        type: tasklet
+        tasklet: cleanTempFileTasklet
+        params:
+          path: /tmp
+      - name: step2
+        type: chunk
+        chunkSize: 2
+
+        reader:
+          bean: simpleStringReader
+
+        processor:
+          bean: lowerCaseProcessor
+
+        writer:
+          bean: consoleWriter

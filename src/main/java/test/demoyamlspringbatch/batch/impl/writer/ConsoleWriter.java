@@ -1,4 +1,24 @@
 package test.demoyamlspringbatch.batch.impl.writer;
 
-public class ConsoleWriter {
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@StepScope
+public class ConsoleWriter
+        implements ItemWriter<String> {
+
+//    @Override
+//    public void write(List<? extends String> items) {
+//        items.forEach(System.out::println);
+//    }
+
+    @Override
+    public void write(Chunk<? extends String> chunk) throws Exception {
+        chunk.forEach(System.out::println);
+    }
 }

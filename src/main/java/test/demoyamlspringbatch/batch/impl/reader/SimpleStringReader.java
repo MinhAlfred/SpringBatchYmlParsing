@@ -1,4 +1,21 @@
 package test.demoyamlspringbatch.batch.impl.reader;
 
-public class SimpleStringReader {
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.stereotype.Component;
+
+import java.util.Iterator;
+import java.util.List;
+
+@Component
+@StepScope
+public class SimpleStringReader implements ItemReader<String> {
+
+    private final Iterator<String> it =
+            List.of("hello", "spring", "batch", "yaml").iterator();
+
+    @Override
+    public String read() {
+        return it.hasNext() ? it.next() : null;
+    }
 }
