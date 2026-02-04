@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class WriterRegistry {
     private final ApplicationContext applicationContext;
 
-    public ItemWriter<?> get(String beanName) {
-        return applicationContext.getBean(beanName, ItemWriter.class);
+    public <O> ItemWriter<O> get(String beanName) {
+        return (ItemWriter<O>) applicationContext.getBean(beanName, ItemWriter.class);
     }
 }

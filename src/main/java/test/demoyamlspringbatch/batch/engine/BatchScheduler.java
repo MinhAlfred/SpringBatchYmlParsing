@@ -7,6 +7,7 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +28,7 @@ public class BatchScheduler {
     private final YamlJobLoader loader;
     private final YamlJobFactory factory;
     private final JobOperator jobLauncher;
+    @Qualifier("taskScheduler")
     private final TaskScheduler taskScheduler;
     private final Map<String, Job> jobMap = new HashMap<>();
     @PostConstruct
@@ -35,7 +37,7 @@ public class BatchScheduler {
                 loader.loadAll("batch-jobs/demo-job.yml");
 
         for (JobDefinition def : defs) {
-            Job job = factory.build(def);   // ✅ build 1 lần
+            Job job = factory.build(def,buildParams(def));   // ✅ build 1 lần
             jobMap.put(def.getName(), job);
             schedule(def);
         }

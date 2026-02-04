@@ -12,6 +12,7 @@ jobs:
         chunkSize: 2
 
         reader:
+          type: bean
           bean: simpleStringReader
 
         processor:
@@ -25,10 +26,14 @@ jobs:
         chunkSize: 2
 
         reader:
-          bean: simpleStringReader
+          type: jdbc
+          sql: select id, name, status from input_data where status = :status
+          params:
+            status: NEW
+          rowMapper: inputDataRowMapper
 
         processor:
-          bean: lowerCaseProcessor
+          bean: inputProcessor
 
         writer:
           bean: consoleWriter
@@ -50,6 +55,7 @@ jobs:
         chunkSize: 2
 
         reader:
+          type: bean
           bean: simpleStringReader
 
         processor:

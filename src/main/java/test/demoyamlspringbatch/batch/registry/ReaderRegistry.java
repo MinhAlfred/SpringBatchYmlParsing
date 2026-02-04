@@ -16,8 +16,8 @@ public class ReaderRegistry {
     public ReaderRegistry(ApplicationContext context) {
         this.context = context;
     }
-
-    public ItemReader<?> get(String beanName) {
-        return context.getBean(beanName, ItemReader.class);
+    @SuppressWarnings("unchecked")
+    public <I>ItemReader<I> get(String beanName) {
+        return (ItemReader<I>) context.getBean(beanName, ItemReader.class);
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.listener.StepExecutionListener;
 import org.springframework.batch.core.repository.JobRepository;
@@ -17,6 +18,7 @@ import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import test.demoyamlspringbatch.batch.factory.ReaderFactory;
 import test.demoyamlspringbatch.batch.model.ChunkStepDefinition;
 import test.demoyamlspringbatch.batch.model.JobDefinition;
 import test.demoyamlspringbatch.batch.model.StepDefinition;
@@ -32,45 +34,53 @@ public class YamlJobFactory {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final ReaderRegistry readerRegistry;
+    private final ReaderFactory readerFactory;
     private final ProcessorRegistry processorRegistry;
     private final WriterRegistry writerRegistry;
     private final TaskletRegistry taskletRegistry;
-    public Job build(JobDefinition def) {
+    public Job build(JobDefinition def, JobParameters params) {
 
         JobBuilder jobBuilder = new JobBuilder(def.getName(), jobRepository);
 
         FlowBuilder<Flow> flow = new FlowBuilder<>("flow");
 
         for (StepDefinition stepDef : def.getSteps()) {
-            flow.next(buildStep(stepDef));
+            flow.next(buildStep(stepDef, params));
         }
 
         return jobBuilder.start(flow.build()).end().build();
     }
-    public Step buildStep(StepDefinition def) {
+    public Step buildStep(StepDefinition def,JobParameters jobParameters) {
 
         if (def instanceof TaskletStepDefinition taskletDef) {
             return buildTaskletStep(taskletDef);
         }
 
         if (def instanceof ChunkStepDefinition chunkDef) {
-            return buildChunkStep(chunkDef);
+            return buildChunkStep(chunkDef,jobParameters);
         }
 
         throw new IllegalArgumentException("Unknown step type");
     }
-    private Step buildChunkStep(ChunkStepDefinition def) {
+    private Step buildChunkStep(
+            ChunkStepDefinition def,
+            JobParameters jobParameters
+    ) {
+        ItemReader<Object> reader =
+                (ItemReader<Object>) readerFactory.build(def.getReader(), jobParameters);
 
-        return new StepBuilder(def.getName(),jobRepository)
-                .<String, String>chunk(def.getChunkSize())
+        ItemProcessor<Object, Object> processor =
+                        processorRegistry.get(def.getProcessor().getBean());
+
+        ItemWriter<Object> writer =
+                        writerRegistry.get(def.getWriter().getBean());
+
+        return new StepBuilder(def.getName(), jobRepository)
+                .<Object, Object>chunk(def.getChunkSize())
                 .transactionManager(transactionManager)
-                .reader((ItemReader<String>)
-                        readerRegistry.get(def.getReader().getBean()))
-                .processor((ItemProcessor<String, String>)
-                        processorRegistry.get(def.getProcessor().getBean()))
-                .writer((ItemWriter<String>)
-                        writerRegistry.get(def.getWriter().getBean()))
+                .reader(reader)
+                .processor(processor)
+                .writer(writer)
                 .build();
     }
     private Step buildTaskletStep(TaskletStepDefinition def) {

@@ -17,8 +17,8 @@ public class ProcessorRegistry {
         this.context = context;
     }
 
-    public ItemProcessor<?, ?> get(String name) {
-        return context.getBean(name, ItemProcessor.class);
+    public <I, O>ItemProcessor<I, O> get(String name) {
+        return (ItemProcessor<I, O>) context.getBean(name, ItemProcessor.class);
     }
 
 }
