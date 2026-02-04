@@ -37,7 +37,7 @@ public class BatchScheduler {
                 loader.loadAll("batch-jobs/demo-job.yml");
 
         for (JobDefinition def : defs) {
-            Job job = factory.build(def,buildParams(def));   // ✅ build 1 lần
+            Job job = factory.build(def,buildParams(def));
             jobMap.put(def.getName(), job);
             schedule(def);
         }

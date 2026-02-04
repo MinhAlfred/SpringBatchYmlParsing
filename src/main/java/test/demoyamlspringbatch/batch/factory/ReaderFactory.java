@@ -53,7 +53,7 @@ public class ReaderFactory {
         );
     }
 
-    private ItemReader<?> buildJdbcReader(
+        private ItemReader<?> buildJdbcReader(
             JdbcReaderDefinition def,
             JobParameters jobParameters
     ) {
