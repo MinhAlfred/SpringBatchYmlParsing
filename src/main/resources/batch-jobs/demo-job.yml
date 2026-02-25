@@ -16,9 +16,11 @@ jobs:
           bean: simpleStringReader
 
         processor:
+          type: bean
           bean: upperCaseProcessor
 
         writer:
+          type: bean
           bean: consoleWriter
 
       - name: step2
@@ -33,33 +35,37 @@ jobs:
           rowMapper: inputDataRowMapper
 
         processor:
-          bean: inputProcessor
-
-        writer:
-          bean: consoleWriter
-
-  - name: jobB
-    parameters:
-      inputFile: classpath:data/input.txt
-    schedule:
-      type: cron
-      expression: "30 */1 * * * *"
-    steps:
-      - name: step1
-        type: tasklet
-        tasklet: cleanTempFileTasklet
-        params:
-          path: /tmp
-      - name: step2
-        type: chunk
-        chunkSize: 2
-
-        reader:
           type: bean
-          bean: simpleStringReader
-
-        processor:
-          bean: lowerCaseProcessor
+          bean: inputToOutputProcessor
 
         writer:
-          bean: consoleWriter
+          type: jdbc
+          sql: >
+            INSERT INTO output_data (name, processed_at)
+            VALUES (:name, :processedAt)
+
+#  - name: jobB
+#    parameters:
+#      inputFile: classpath:data/input.txt
+#    schedule:
+#      type: cron
+#      expression: "30 */1 * * * *"
+#    steps:
+#      - name: step1
+#        type: tasklet
+#        tasklet: cleanTempFileTasklet
+#        params:
+#          path: /tmp
+#      - name: step2
+#        type: chunk
+#        chunkSize: 2
+#
+#        reader:
+#          type: bean
+#          bean: simpleStringReader
+#
+#        processor:
+#          bean: lowerCaseProcessor
+#
+#        writer:
+#          bean: consoleWriter

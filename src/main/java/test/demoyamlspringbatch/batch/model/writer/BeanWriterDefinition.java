@@ -1,4 +1,10 @@
 package test.demoyamlspringbatch.batch.model.writer;
 
-public class BeanWriterDefinition {
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class BeanWriterDefinition extends WriterDefinition {
+    private String bean;
 }

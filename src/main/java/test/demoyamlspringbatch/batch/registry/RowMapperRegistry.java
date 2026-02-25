@@ -1,5 +1,6 @@
 package test.demoyamlspringbatch.batch.registry;
 
+import org.springframework.core.ResolvableType;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +20,34 @@ public class RowMapperRegistry {
         });
     }
 
-    public RowMapper<?> get(String name) {
+    @SuppressWarnings("unchecked")
+    public <T> RowMapper<T> get(String name) {
+        return (RowMapper<T>) getOrThrow(name);
+    }
+
+    public Class<?> resolveType(String name) {
+        Class<?> type = ResolvableType
+                .forClass(getOrThrow(name).getClass())
+                .as(RowMapper.class)
+                .getGeneric(0)
+                .resolve();
+
+        if (type == null) {
+            throw new IllegalStateException(
+                    "Cannot resolve generic type for RowMapper: " + name
+                            + " — đảm bảo không dùng lambda hoặc raw type"
+            );
+        }
+        return type;
+    }
+
+    private RowMapper<?> getOrThrow(String name) {
         RowMapper<?> rm = map.get(name);
         if (rm == null) {
-            throw new IllegalArgumentException("RowMapper not found: " + name);
+            throw new IllegalArgumentException(
+                    "RowMapper not found: " + name
+                            + " — available: " + map.keySet()
+            );
         }
         return rm;
     }

@@ -13,6 +13,9 @@ public class SimpleStringReader implements ItemReader<String> {
 
     private final Iterator<String> it =
             List.of("hello", "spring", "batch", "yaml").iterator();
+    public SimpleStringReader() {
+        System.out.println(">>> SimpleStringReader CREATED: " + this.hashCode());
+    }
 
     @Override
     public String read() {

@@ -1,11 +1,11 @@
 package test.demoyamlspringbatch.batch.factory;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.infrastructure.item.ItemReader;
-import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.ResolvableType;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import test.demoyamlspringbatch.batch.impl.reader.NamedParameterJdbcItemReader;
@@ -34,15 +34,14 @@ public class ReaderFactory {
         this.rowMapperRegistry = rowMapperRegistry;
     }
 
-    public ItemReader<?> build(
+    public <T> ItemReader<T> build(
             ReaderDefinition def,
             JobParameters jobParameters
     ) {
         if (def instanceof BeanReaderDefinition beanDef) {
-            return context.getBean(
-                    beanDef.getBean(),
-                    ItemReader.class
-            );
+            @SuppressWarnings("unchecked")
+            ItemReader<T> reader = context.getBean(beanDef.getBean(), ItemReader.class);
+            return reader;
         }
         if (def instanceof JdbcReaderDefinition jdbcDef) {
             return buildJdbcReader(jdbcDef, jobParameters);
@@ -52,20 +51,19 @@ public class ReaderFactory {
                 "Unsupported reader definition: " + def.getClass()
         );
     }
-
-        private ItemReader<?> buildJdbcReader(
+    private <T> ItemReader<T> buildJdbcReader(
             JdbcReaderDefinition def,
             JobParameters jobParameters
     ) {
-
         NamedParameterJdbcTemplate template =
                 new NamedParameterJdbcTemplate(dataSource);
 
         Map<String, Object> params =
                 mergeParams(def.getParams(), jobParameters);
-        // 🔥 log này cực quan trọng để debug
+
         log.info("JDBC reader params = {}", params);
-        return new NamedParameterJdbcItemReader<>(
+
+        return new NamedParameterJdbcItemReader<T>(
                 template,
                 def.getSql(),
                 params,
@@ -90,5 +88,27 @@ public class ReaderFactory {
         );
 
         return map;
+    }
+
+    public Class<?> resolveOutputType(ReaderDefinition def) {
+        if (def instanceof JdbcReaderDefinition jdbcDef) {
+            RowMapper<?> rowMapper = rowMapperRegistry.get(jdbcDef.getRowMapper());
+            return ResolvableType
+                    .forClass(rowMapper.getClass())
+                    .as(RowMapper.class)
+                    .getGeneric(0)
+                    .resolve();
+        }
+
+        if (def instanceof BeanReaderDefinition beanDef) {
+            ItemReader<?> reader = context.getBean(beanDef.getBean(), ItemReader.class);
+            return ResolvableType
+                    .forClass(reader.getClass())
+                    .as(ItemReader.class)
+                    .getGeneric(0)
+                    .resolve();
+        }
+
+        throw new IllegalArgumentException("Unsupported reader definition: " + def.getClass());
     }
 }

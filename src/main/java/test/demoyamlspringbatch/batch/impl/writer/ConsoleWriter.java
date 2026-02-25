@@ -8,14 +8,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@StepScope
 public class ConsoleWriter
         implements ItemWriter<String> {
 
-//    @Override
-//    public void write(List<? extends String> items) {
-//        items.forEach(System.out::println);
-//    }
 
     @Override
     public void write(Chunk<? extends String> chunk) throws Exception {
